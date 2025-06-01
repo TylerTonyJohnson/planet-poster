@@ -154,6 +154,8 @@
 
 	.border {
 		height: 100%;
+		max-height: 100vh;
+		max-width: 100vw;
 		width: calc(62vh - 6rem);
 		padding: 1rem;
 		background-color: #cac4a2;
