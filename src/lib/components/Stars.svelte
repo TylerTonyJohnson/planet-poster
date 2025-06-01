@@ -1,58 +1,75 @@
 <script>
 	import { T } from '@threlte/core';
-	import { AdditiveBlending } from 'three';
-	import vertexShader from '$lib/shaders/pointVertex.glsl?raw';
-	import fragmentShader from '$lib/shaders/pointFragment.glsl?raw';
+	import { InstancedMesh, Instance } from '@threlte/extras';
+	import { DoubleSide } from 'three';
+	import { Tween } from 'svelte/motion';
+	import { cubicIn, cubicInOut } from 'svelte/easing';
 
-	let { lightColor } = $props();
+	let { lightColor, isPlaying, camera } = $props();
 
-	const numStars = 1000;
-	const radius = 1000;
+	const STREAK_COUNT = 1000; // e.g. 1 degree spacing
+	const MIN_RADIUS = 100;
+	const MAX_RADIUS = MIN_RADIUS + 600;
+	const STREAK_LENGTH = 60;
+	const MAX_STREAK_THICKNESS = 4;
+	const MIN_STREAK_THICKNESS = 0.5;
 
-	const streakLength = 100;
+	const offset = new Tween(200, {
+		duration: 2000,
+		easing: cubicInOut,
+		delay: 0
+	});
 
-    // Geometry setup
+	const starOpacity = new Tween(1, {
+		duration: 3000,
+		easing: cubicInOut,
+		delay: 0
+	});
 
-	const pointPositions = new Float32Array(numStars * 3);
-	for (let i = 0; i < numStars; i++) {
-		const theta = Math.random() * 2 * Math.PI;
-		const phi = Math.acos(2 * Math.random() - 1);
-		const r = radius + (Math.random() - 0.5) * 500;
+	let streaks = [];
 
-		const x = r * Math.sin(phi) * Math.cos(theta);
-		const y = r * Math.sin(phi) * Math.sin(theta);
-		const z = r * Math.cos(phi);
+	for (let i = 0; i < STREAK_COUNT; i++) {
+		const angle = (i / STREAK_COUNT) * Math.PI * 2; // / 4 + (3 * Math.PI) / 8; // 45 degrees offset
 
-		pointPositions.set([x, y, z], i * 3);
+		const distance = Math.random() * (MAX_RADIUS - MIN_RADIUS) + MIN_RADIUS;
+		// Calculate direction based on angle
+
+		const dirX = Math.cos(angle);
+		const dirZ = Math.sin(angle);
+
+		const x = Math.cos(angle) * distance;
+		const z = Math.sin(angle) * distance;
+
+		const thickness =
+			Math.random() * (MAX_STREAK_THICKNESS - MIN_STREAK_THICKNESS) + MIN_STREAK_THICKNESS;
+
+		streaks.push({
+			position: [x, 0, z],
+			rotation: [-Math.PI / 2, 0, -angle],
+			thickness: thickness
+		});
 	}
 
-    const linePositions = new Float32Array(numStars * 3 * 2);
-    const t = new Float32Array(numStars * 2);
-
+	$effect(() => {
+		if (isPlaying) {
+			console.log('setting');
+			offset.set(0);
+			starOpacity.set(0.25);
+		}
+	});
 </script>
 
-<!-- <T.Points>
-	<T.BufferGeometry>
-		<T.BufferAttribute
-			args={[pointPositions, 3]}
-			attach={({ parent, ref }) => {
-				parent.setAttribute('position', ref);
-			}}
-		/>
-	</T.BufferGeometry>
+<InstancedMesh
+	limit={STREAK_COUNT}
+	range={STREAK_COUNT}
+	position={[0, offset.current, -offset.current]}
+	rotation={[1, 0, 0]}
+	renderOrder={-1}
+>
+	<T.PlaneGeometry args={[STREAK_LENGTH, 0.1]} />
+	<T.MeshBasicMaterial color={lightColor} depthWrite={false} toneMapped={false} />
 
-	<T.PointsMaterial size={4} sizeAttenuation={true} depthWrite={false} color={lightColor} />
-</T.Points> -->
-
-
-	<!-- <T.ShaderMaterial
-		{vertexShader}
-		{fragmentShader}
-		uniforms={{ uColor: { value: lightColor }, uStreakLength: { value: streakLength } }}
-		transparent
-		vertexColors={false}
-		lights={false}
-		toneMapped={false}
-		depthWrite={false}
-		blending={AdditiveBlending}
-	/> -->
+	{#each streaks as { position, rotation, thickness }}
+		<Instance {position} {rotation} scale={[1, thickness * starOpacity.current, 1]} />
+	{/each}
+</InstancedMesh>

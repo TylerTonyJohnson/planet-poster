@@ -11,28 +11,51 @@
 
 	let { planet, lightColor, darkColor, gradientMap, isPlaying } = $props();
 
-	const speed = (planet.size / planet.orbit.radius) * 10;
+	const maxSpeed = (planet.size / planet.orbit.radius) * 5;
+
+	const currentSpeed = new Tween(0, {
+		duration: 1000,
+		easing: cubicOut,
+		delay: planet.orbit.startDelay + 3000 || 0
+	});
 
 	let currentAngle = $state(planet.orbit.startAngle);
 
 	const orbitFade = new Tween(0, {
 		duration: 1000,
 		easing: cubicOut,
-		delay: 5000
+		delay: 4000
 	});
 
-	$effect(() => {
-		if (isPlaying) orbitFade.set(1);
-	})
+	const orbitFlatten = new Tween(1, {
+		duration: 1000,
+		easing: cubicOut,
+		delay: 2000
+	});
+
+	$effect((offset) => {
+		if (isPlaying) {
+			orbitFade.set(1);
+			orbitFlatten.set(0);
+			currentSpeed.set(maxSpeed);
+		}
+	});
 
 	useTask((delta) => {
 		if (!isPlaying) return;
-		currentAngle += delta * speed;
+		currentAngle += delta * currentSpeed.current;
 	});
 </script>
 
 <!-- Planet and Orbit -->
-<T.Group position={[0, 0, 0]} rotation={[planet.orbit.tilt.x, 0, planet.orbit.tilt.y]}>
+<T.Group
+	position={[0, 0, 0]}
+	rotation={[
+		planet.orbit.tilt.x * orbitFlatten.current,
+		0,
+		planet.orbit.tilt.y * orbitFlatten.current
+	]}
+>
 	<!-- Orbit Line -->
 	<Orbit
 		radius={planet.orbit.radius}
@@ -68,6 +91,7 @@
 				radius={planet.size + planet.rings.radius}
 				color={lightColor}
 				tilt={planet.rings.tilt || { x: 0, y: 0 }}
+				thickness={planet.rings.thickness || 0.1}
 			/>
 		{/if}
 	</T.Group>

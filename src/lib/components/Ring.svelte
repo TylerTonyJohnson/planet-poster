@@ -3,7 +3,7 @@
 	import { MeshLineMaterial, MeshLineGeometry } from '@threlte/extras';
 	import { EllipseCurve, Vector3 } from 'three';
 
-	let { radius, color, type = 'solid', tilt = { x: 0, y: 0 }, angleX = 0, angleZ = 0 } = $props();
+	let { radius, color, type = 'solid', tilt = { x: 0, y: 0 }, thickness } = $props();
 
 	function getPoints() {
 		const curve = new EllipseCurve(0, 0, radius, radius, 0, 2 * Math.PI, false, 0);
@@ -17,6 +17,6 @@
 	{#if type === 'dashed'}
 		<MeshLineMaterial {color} width={0.2} transparent dashArray={0.85 / radius} dashRatio={0.5} />
 	{:else}
-		<MeshLineMaterial {color} width={0.75} />
+		<MeshLineMaterial {color} width={thickness} />
 	{/if}
 </T.Mesh>
