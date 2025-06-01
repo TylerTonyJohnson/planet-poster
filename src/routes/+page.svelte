@@ -55,7 +55,7 @@
 	</div>
 
 	<a
-		href="https://github.com/your-repo"
+		href="https://github.com/TylerTonyJohnson/planet-poster"
 		target="_blank"
 		rel="noopener noreferrer"
 		class="code-button"
