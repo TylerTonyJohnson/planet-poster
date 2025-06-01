@@ -228,6 +228,16 @@
 		background-color: #cac4a2;
 	}
 
+	@media (max-width: 768px) {
+		.frame {
+			padding: 0rem;
+		}
+
+		.frame.widen {
+			padding: 0rem;
+		}
+	}
+
 	@keyframes fadeLoop {
 		0% {
 			opacity: 0.25;
